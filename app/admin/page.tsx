@@ -37,6 +37,7 @@ export default function AdminPortal() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "videos" | "pdfs" | "mcqs" | "current-affairs" | "pyqs" | "updates" | "banners" | "settings"
   >("dashboard");
@@ -67,8 +68,9 @@ export default function AdminPortal() {
   const [bulkImportError, setBulkImportError] = useState("");
   const [bulkImportSuccess, setBulkImportSuccess] = useState("");
 
-  // Check auth on mount
+  // Check auth on mount & load settings
   useEffect(() => {
+    getSettings().then(setGlobalSettings);
     const authStatus = sessionStorage.getItem("admin_authenticated");
     if (authStatus === "true") {
       setIsAuthenticated(true);
@@ -89,7 +91,8 @@ export default function AdminPortal() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") {
+    const correctPassword = globalSettings?.adminPassword || "admin123";
+    if (password === correctPassword) {
       sessionStorage.setItem("admin_authenticated", "true");
       setIsAuthenticated(true);
       setLoginError("");
@@ -305,6 +308,15 @@ export default function AdminPortal() {
                 placeholder="Enter password (hint: admin123)"
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-semibold focus:outline-none focus:border-primary text-slate-800"
               />
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-[10px] font-extrabold text-primary hover:text-primary-dark uppercase tracking-wider transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -321,6 +333,69 @@ export default function AdminPortal() {
             </button>
           </form>
         </div>
+
+        {showForgotModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForgotModal(false)} />
+            
+            <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl relative border border-slate-200 z-10 animate-fade-in flex flex-col">
+              <div className="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <h3 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider">
+                  Recover Password
+                </h3>
+                <button 
+                  type="button" 
+                  onClick={() => setShowForgotModal(false)} 
+                  className="text-slate-400 hover:text-slate-600 font-extrabold text-lg"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 text-xs font-semibold text-slate-600 leading-relaxed">
+                <p>
+                  Aapka administrator password database me saved hai. Ise recover ya reset karne ke liye niche diye gaye instructions follow karein:
+                </p>
+
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl text-blue-800 space-y-2">
+                  <span className="font-bold uppercase tracking-wider text-[10px] block">Local (Development) Mode</span>
+                  <p className="text-[11px]">
+                    Agar aap locally test kar rahe hain, toh aap browser localStorage settings ko clear karke password ko defaults (`admin123`) par reset kar sakte hain.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm("Kya aap sach me sabhi database settings ko clear karke password default ('admin123') par reset karna chahte hain?")) {
+                        localStorage.removeItem("strong_competitor_db");
+                        window.location.reload();
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-[10px] uppercase tracking-wider transition-colors inline-block mt-1"
+                  >
+                    Reset Local Storage to Default
+                  </button>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl text-amber-800 space-y-1">
+                  <span className="font-bold uppercase tracking-wider text-[10px] block">Production (Live Website) Mode</span>
+                  <p className="text-[11px]">
+                    Agar aapki website deployed hai, toh aap apne **Firebase Console** me login karein. **Firestore Database** section me **`settings/global`** document ko check karein, wahan aapko **`adminPassword`** field mil jayega jise aap direct modify/edit kar sakte hain.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-slate-100 bg-slate-50 text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 rounded-xl uppercase tracking-wider text-[10px] transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -835,6 +910,21 @@ export default function AdminPortal() {
                   required
                   value={globalSettings.telegramUrl || ""}
                   onChange={(e) => setGlobalSettings({ ...globalSettings, telegramUrl: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <h3 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider pt-4 border-t border-slate-100">Security</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Admin Portal Password</label>
+                <input
+                  type="text"
+                  required
+                  value={globalSettings.adminPassword || "admin123"}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, adminPassword: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:border-primary"
                 />
               </div>

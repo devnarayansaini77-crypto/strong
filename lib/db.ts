@@ -248,7 +248,8 @@ const DEFAULT_DATABASE = {
     phone: "+91 9876543210",
     youtubeUrl: "https://www.youtube.com/@strongcompetitor",
     telegramUrl: "https://t.me/strongcompetitor",
-    razorpayKey: "rzp_test_mockKey12345"
+    razorpayKey: "rzp_test_mockKey12345",
+    adminPassword: "admin123"
   }
 };
 
