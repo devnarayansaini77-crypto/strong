@@ -38,6 +38,7 @@ export default function AdminPortal() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [newPasswordInput, setNewPasswordInput] = useState("");
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "videos" | "pdfs" | "mcqs" | "current-affairs" | "pyqs" | "updates" | "banners" | "settings"
   >("dashboard");
@@ -356,6 +357,44 @@ export default function AdminPortal() {
                 <p>
                   Aapka administrator password database me saved hai. Ise recover ya reset karne ke liye niche diye gaye instructions follow karein:
                 </p>
+
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl text-slate-800 space-y-3">
+                  <span className="font-bold uppercase tracking-wider text-[10px] block text-slate-500">Direct Password Reset</span>
+                  <p className="text-[11px] text-slate-500">
+                    Aap direct yahan se naya password set kar sakte hain:
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter new password"
+                      value={newPasswordInput}
+                      onChange={(e) => setNewPasswordInput(e.target.value)}
+                      className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-primary flex-grow"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!newPasswordInput.trim()) {
+                          alert("Password empty nahi ho sakta!");
+                          return;
+                        }
+                        const updated = { ...globalSettings, adminPassword: newPasswordInput };
+                        try {
+                          await updateSettings(updated);
+                          alert("Password successfully reset! Ab aap naye password se login kar sakte hain.");
+                          setGlobalSettings(updated);
+                          setShowForgotModal(false);
+                          setNewPasswordInput("");
+                        } catch (err) {
+                          alert("Failed to reset password.");
+                        }
+                      }}
+                      className="bg-primary hover:bg-primary-dark text-white font-bold px-4 py-2 rounded-xl text-[10px] uppercase tracking-wider transition-colors"
+                    >
+                      Set Password
+                    </button>
+                  </div>
+                </div>
 
                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl text-blue-800 space-y-2">
                   <span className="font-bold uppercase tracking-wider text-[10px] block">Local (Development) Mode</span>
